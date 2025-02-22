@@ -45,8 +45,8 @@ public class SupplierService {
     }
     @KafkaListener(topics = "id-order-created-event-topic", groupId = "delivery-group")
     public void inventoryRequestProcessing(OrderEvent orderEvent) {
-        final int maxRetries = 10; // Максимальное количество попыток
-        final int waitTime = 10000; // Время ожидания в миллисекундах (1 секунда)
+        final int maxRetries = 10; 
+        final int waitTime = 10000; 
         int attempts = 0;
 
         while (attempts < maxRetries) {
@@ -59,19 +59,18 @@ public class SupplierService {
                 orderEvent.setSupplierId(supplier.getId());
                 orderEvent.setInternal_execution_code(5);
                 template.send("do-order-created-event-topic", null, orderEvent);
-                return; // Завершить метод после успешной обработки
+                return;
             } else {
                 attempts++;
                 try {
-                    Thread.sleep(waitTime); // Ожидание перед следующей проверкой
+                    Thread.sleep(waitTime); 
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // Восстановление прерывания
-                    // Логирование или обработка исключения
-                    break; // Прерывание цикла в случае ошибки
+                    Thread.currentThread().interrupt(); 
+                    
+                    break;
                 }
             }
         }
-        // Если свободный поставщик не найден после всех попыток
         orderEvent.setInternal_execution_code(3);
         template.send("do-order-created-event-topic", null, orderEvent);
         template.send("di-order-fail-created-event-topic", null, orderEvent);
